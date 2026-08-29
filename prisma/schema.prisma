@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SELLER
+  BUYER
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  tgId          String       @unique 
+  firstName     String?      
+  lastName      String?      
+  username      String       @unique 
+  email         String       @unique
+  password      String
+  role          Role         @default(BUYER)  
+  customUrl     String?      
+  location      String?
+  title         String?
+  bio           String?
+  hourlyRateNum String?
+  skills        String?      
+  portfolio     String?      
+  languages     String?      
+  education     String?      
+  experience    String?      
+  createdAt     DateTime     @default(now())
+  favorites     Favorite[]
+  orders        Order[]
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  sellerId  Int
+  type      String   // "withdraw" বা "add"
+  amount    Float
+  method    String
+  details   String?  // accountNumber বা অন্য কিছু
+  status    String   @default("Successful")
+  createdAt DateTime @default(now())
+}
+
+model PlatformSetting {
+  id             String  @id @default(uuid())
+  commissionRate Float
+  minWithdrawal  Decimal
+  supportEmail   String
+}
+
+model Project {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String
+  budget      Float
+  currency    String      @default("USD")
+  category    String?     @default("General")
+  type        String      @default("project") // 'project' বা 'contest'
+  authorName  String?
+  userId      Int?
+  status      String      @default("Pending") // Pending, Approved, Active
+  createdAt   DateTime    @default(now())
+  reviews     Review[]
+}
+
+model Favorite {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id])
+  type     String // 'client' বা 'gig'
+  targetId Int
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  title     String
+  price     Float
+  status    String
+  buyerId   Int
+  user      User     @relation(fields: [buyerId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
+  comment   String
+  rating    Float
+}
+
+model PageContent {
+  id        Int      @id @default(autoincrement())
+  pageKey   String   @unique // যেমন: 'about', 'terms', 'privacy'
+  title     String
+  content   String   // পুরো টেক্সট বা HTML কন্টেন্ট
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  chatRoomId String   // যেমন: buyer_id বা username
+  senderRole String   // "ADMIN" বা "CLIENT"
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model PayoutMethod {
+  id            Int      @id @default(autoincrement())
+  sellerId      Int
+  method        String   // যেমন: Bank, PayPal ইত্যাদি
+  accountNumber String
+  accountName   String?
+  createdAt     DateTime @default(now())
+}
